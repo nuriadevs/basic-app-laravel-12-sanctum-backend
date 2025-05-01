@@ -38,13 +38,13 @@ class LoginValidation
                 'required',
                 'email',
                 'regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+
             ],
             'password' => [
                 'required',
                 'string',
                 'min:8',
-                'regex:/^[a-zA-Z0-9]{12}$/
-                ',
+                'regex:/^[a-zA-Z0-9]{12}$/',
             ],
         ];
 

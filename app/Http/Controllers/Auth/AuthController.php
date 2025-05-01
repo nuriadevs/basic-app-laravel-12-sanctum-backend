@@ -52,6 +52,10 @@ class AuthController extends Controller
                 return ApiResponse::error('Incorrect credentials', 401, $user);
             }
 
+            if (!$user->is_active) {
+                return ApiResponse::error('This account is inactive', 401);
+            }
+
             $token = $user->createToken($request->email)->plainTextToken;
 
             return ApiResponse::success('User logged in successfully', 200, [
@@ -85,7 +89,7 @@ class AuthController extends Controller
 
             $token = $user->createToken('API TOKEN')->plainTextToken;
 
-            return ApiResponse::success('User registered in successfully', 200, [
+            return ApiResponse::register('User registered in successfully', 201, [
                 'user' => $user,
                 'token' => $token,
             ]);
@@ -93,6 +97,7 @@ class AuthController extends Controller
             if (strpos($e->getMessage(), 'users_dni_unique') !== false) {
                 return ApiResponse::error('The dni is already registered', 500);
             }
+            return ApiResponse::error('Database error: ' . $e->getMessage(), 500);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors()->all();
             return ApiResponse::error('Validation errors: ' . implode(', ', $errors), 422);

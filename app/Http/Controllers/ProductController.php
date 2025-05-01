@@ -55,7 +55,7 @@ class ProductController extends Controller
 
 
     /**
-     * Stores a new user.
+     * Stores a new product.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -68,12 +68,11 @@ class ProductController extends Controller
             ProductValidation::validateProductCreation($request->input());
 
             $product = Product::create($request->all());
-            return ApiResponse::success('Product created successfully', 200, $product);
+            return ApiResponse::success('Product created successfully', 201, $product);
         } catch (ModelNotFoundException $e) {
             return ApiResponse::error('Product not found ' . $e->getMessage(), 404);
         } catch (ValidationException $e) {
-            $errors = $e->validator->errors()->all();
-            return ApiResponse::error('Validation errors: ' . implode(', ', $errors), 422);
+            return ApiResponse::error('Validation failed', 422, $e->validator->errors());
         } catch (Exception $e) {
             return ApiResponse::error('Error creating the product ' . $e->getMessage(), 500);
         }
@@ -119,7 +118,7 @@ class ProductController extends Controller
             $product = Product::findOrFail($id);
             $product->delete();
 
-            return ApiResponse::success('Product deleted successfully', 200);
+            return ApiResponse::success('Product deleted successfully', 200, $product);
         } catch (ModelNotFoundException $e) {
             return ApiResponse::error('Product not found ' . $e->getMessage(), 404);
         } catch (Exception $e) {

@@ -2,14 +2,11 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderDetail;
-use Faker\Factory as Faker;
-
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {

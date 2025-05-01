@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\Product;
 use App\Validations\OrderValidation;
 use App\Http\Response\ApiResponse;
+use App\Services\OrderService; // Importamos el servicio
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
@@ -30,7 +32,7 @@ class OrderController extends Controller
     public function index()
     {
         try {
-            $orders = Order::with('orderDetails')->get();
+            $orders = OrderService::getAllOrders();
             return ApiResponse::success('List of orders', 200, $orders);
         } catch (Exception $e) {
             return ApiResponse::error('Error while retrieving the list of orders ' . $e->getMessage(), 500);
@@ -46,12 +48,28 @@ class OrderController extends Controller
     public function show($id)
     {
         try {
-            $order = Order::with('orderDetails')->findOrFail($id);
-            return ApiResponse::success('Order', 200, $order);
+            $order = OrderService::getOrderById($id);
+
+            return response()->json([
+                'message' => 'Order retrieved successfully',
+                'statusCode' => 200,
+                'error' => false,
+                'data' => $order,
+            ], 200);
         } catch (ModelNotFoundException $e) {
-            return ApiResponse::error('Order not found ' . $e->getMessage(), 404);
+            return response()->json([
+                'message' => 'Order not found',
+                'statusCode' => 404,
+                'error' => true,
+                'data' => [],
+            ], 404);
         } catch (Exception $e) {
-            return ApiResponse::error('Error while retrieving the order ' . $e->getMessage(), 500);
+            return response()->json([
+                'message' => 'Error retrieving the order',
+                'statusCode' => 500,
+                'error' => true,
+                'data' => [],
+            ], 500);
         }
     }
 
@@ -66,30 +84,31 @@ class OrderController extends Controller
     {
         try {
             OrderValidation::validateOrderCreation($request->all());
-            $order = Order::create([
-                'user_id' => $request->user_id,
-                'total_amount' => $request->total_amount,
-            ]);
 
-            foreach ($request->order_details as $detail) {
-                $order->orderDetails()->create([
-                    'product_id' => $detail['product_id'],
-                    'quantity' => $detail['quantity'],
-                    'price' => $detail['price'],
-                    'total_price' => $detail['total_price'],
-                ]);
-            }
+            $orderData = OrderService::createOrder($request);
 
-            $order->load('orderDetails');
-
-            return ApiResponse::success('Order created successfully', 200, $order);
-        } catch (ModelNotFoundException $e) {
-            return ApiResponse::error('Order not found ' . $e->getMessage(), 404);
+            return response()->json([
+                'message' => 'Order created successfully',
+                'statusCode' => 200,
+                'error' => false,
+                'data' => $orderData,
+            ], 200);
         } catch (ValidationException $e) {
-            $errors = $e->validator->errors()->all();
-            return ApiResponse::error('Validation errors: ' . implode(', ', $errors), 422);
+            return response()->json([
+                'message' => 'Validation failed',
+                'statusCode' => 422,
+                'error' => true,
+                'data' => $e->errors(),
+            ], 422);
         } catch (Exception $e) {
-            return ApiResponse::error('Error creating the order ' . $e->getMessage(), 500);
+            return response()->json([
+                'message' => 'Error creating the order',
+                'statusCode' => 500,
+                'error' => true,
+                'exception' => $e->getMessage(), // <--- AÑADIR ESTO
+                'trace' => $e->getTraceAsString(), // <--- Y ESTO TAMBIÉN
+                'data' => [],
+            ], 500);
         }
     }
 
@@ -103,32 +122,13 @@ class OrderController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            OrderValidation::validateOrderCreation($request->all());
-            $order = Order::findOrFail($id);
+            $orderData = OrderService::updateOrder($request, $id);
 
-            $order->update([
-                'user_id' => $request->user_id,
-                'total_amount' => $request->total_amount,
-            ]);
-
-            foreach ($request->order_details as $detail) {
-                $orderDetail = OrderDetail::findOrFail($detail['id']);
-                $orderDetail->update([
-                    'product_id' => $detail['product_id'],
-                    'quantity' => $detail['quantity'],
-                    'price' => $detail['price'],
-                    'total_price' => $detail['total_price'],
-                ]);
-            }
-
-            $order->load('orderDetails');
-
-            return ApiResponse::success('Order updated successfully', 200, $order);
+            return ApiResponse::success('Order updated successfully', 200, $orderData);
         } catch (ModelNotFoundException $e) {
-            return ApiResponse::error('Order not found ' . $e->getMessage(), 404);
+            return ApiResponse::error('Order or product not found ' . $e->getMessage(), 404);
         } catch (ValidationException $e) {
-            $errors = $e->validator->errors()->all();
-            return ApiResponse::error('Validation errors: ' . implode(', ', $errors), 422);
+            return ApiResponse::error('Validation failed', 422, $e->validator->errors());
         } catch (Exception $e) {
             return ApiResponse::error('Error updating the order ' . $e->getMessage(), 500);
         }
@@ -149,7 +149,7 @@ class OrderController extends Controller
 
             $order->delete();
 
-            return ApiResponse::success('Order deleted successfully', 200);
+            return ApiResponse::success('Order deleted successfully', 200, $order);
         } catch (ModelNotFoundException $e) {
             return ApiResponse::error('Order not found ' . $e->getMessage(), 404);
         } catch (Exception $e) {

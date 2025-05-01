@@ -125,7 +125,7 @@ class UserController extends Controller
             $user = User::findOrFail($id);
             $user->delete();
 
-            return ApiResponse::success('User deleted successfully', 200);
+            return ApiResponse::success('User deleted successfully', 200, $user);
         } catch (ModelNotFoundException $e) {
             return ApiResponse::error('User not found ' . $e->getMessage(), 404);
         } catch (Exception $e) {
