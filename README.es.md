@@ -49,53 +49,31 @@ Esta aplicación ha sido desarrollada con Laravel, ofrece operaciones CRUD y un 
 
 10. Endpoints de la API
 
-| Endpoint | **Métodos**| Rutas|
+| Endpoint         | **Métodos** | Rutas                    |
+|------------------|-------------|--------------------------|
+| **Autenticación** |             |                          |
+| Login            | POST        | api/auth/login           |
+| Register         | POST        | api/auth/register        |
+| Logout           | POST        | api/auth/logout          |
+| **Usuarios**     |             |                          |
+| Index            | GET         | api/users                |
+| Show             | GET         | api/users/{user}         |
+| Store            | POST        | api/users                |
+| Update           | PATCH       | api/users/{user}         |
+| Destroy          | DELETE      | api/users/{user}         |
+| **Productos**    |             |                          |
+| Index            | GET         | api/products             |
+| Show             | GET         | api/products/{product}   |
+| Store            | POST        | api/products             |
+| Update           | PATCH       | api/products/{product}   |
+| Destroy          | DELETE      | api/products/{product}   |
+| **Pedidos**      |             |                          |
+| Index            | GET         | api/orders               |
+| Show             | GET         | api/orders/{order}       |
+| Store            | POST        | api/orders               |
+| Update           | PATCH       | api/orders/{order}       |
+| Destroy          | DELETE      | api/orders/{order}       |
 
-|---------------------|--------|--------------------------|
-
-| **Autenticación** | | |
-
-| Login | POST | api/auth/login |
-
-| Register | POST | api/auth/register |
-
-| Logout | POST | api/auth/logout |
-
-| **Usuarios** | | |
-
-| Index | GET | api/users |
-
-| Show | GET | api/users/{user} |
-
-| Store | POST | api/users |
-
-| Update | PATCH | api/users/{user} |
-
-| Destroy | DELETE | api/users/{user} |
-
-| **Productos** | | |
-
-| Index | GET | api/products |
-
-| Show | GET | api/products/{product} |
-
-| Store | POST | api/products |
-
-| Update | PATCH | api/products/{product} |
-
-| Destroy | DELETE | api/products/{product} |
-
-| **Pedidos** | | |
-
-| Index | GET | api/orders |
-
-| Show | GET | api/orders/{order} |
-
-| Store | POST | api/orders |
-
-| Update | PATCH | api/orders/{order} |
-
-| Destroy | DELETE | api/orders/{order} |
 
 ## Variables de Entorno
 
