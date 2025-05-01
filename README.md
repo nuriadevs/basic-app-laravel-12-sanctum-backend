@@ -66,7 +66,7 @@ This application has been developed with Laravel, it offers CRUD operations and 
 
 9. Access the application in your web browser at [http://localhost:8000](http://localhost:8000).
 
-10. API endpoints
+## API endpoints
 
   
 
