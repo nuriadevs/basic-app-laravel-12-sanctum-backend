@@ -70,53 +70,30 @@ This application has been developed with Laravel, it offers CRUD operations and 
 
   
 
-| Endpoint | **Methods**| Routes|
-
-|---------------------|--------|--------------------------|
-
-| **Auth** | | |
-
-| Login | POST | api/auth/login |
-
-| Register | POST | api/auth/register |
-
-| Logout | POST | api/auth/logout |
-
-| **Users** | | |
-
-| Index | GET | api/users |
-
-| Show | GET | api/users/{user} |
-
-| Store | POST | api/users |
-
-| Update | PATCH | api/users/{user} |
-
-| Destroy | DELETE | api/users/{user} |
-
-| **Products** | | |
-
-| Index | GET | api/products |
-
-| Show | GET | api/products/{product} |
-
-| Store | POST | api/products |
-
-| Update | PATCH | api/products/{product} |
-
-| Destroy | DELETE | api/products/{product} |
-
-| **Orders** | | |
-
-| Index | GET | api/orders |
-
-| Show | GET | api/orders/{order} |
-
-| Store | POST | api/orders |
-
-| Update | PATCH | api/orders/{order} |
-
-| Destroy | DELETE | api/orders/{order} |
+| Endpoint         | **Methods** | Routes                    |
+|------------------|-------------|---------------------------|
+| **Authentication** |             |                           |
+| Login            | POST        | api/auth/login            |
+| Register         | POST        | api/auth/register         |
+| Logout           | POST        | api/auth/logout           |
+| **Users**        |             |                           |
+| Index            | GET         | api/users                 |
+| Show             | GET         | api/users/{user}          |
+| Store            | POST        | api/users                 |
+| Update           | PATCH       | api/users/{user}          |
+| Destroy          | DELETE      | api/users/{user}          |
+| **Products**     |             |                           |
+| Index            | GET         | api/products              |
+| Show             | GET         | api/products/{product}    |
+| Store            | POST        | api/products              |
+| Update           | PATCH       | api/products/{product}    |
+| Destroy          | DELETE      | api/products/{product}    |
+| **Orders**       |             |                           |
+| Index            | GET         | api/orders                |
+| Show             | GET         | api/orders/{order}        |
+| Store            | POST        | api/orders                |
+| Update           | PATCH       | api/orders/{order}        |
+| Destroy          | DELETE      | api/orders/{order}        |
 
  
 ## Environment Variables
