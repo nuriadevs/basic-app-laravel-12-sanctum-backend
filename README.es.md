@@ -47,7 +47,7 @@ Esta aplicación ha sido desarrollada con Laravel, ofrece operaciones CRUD y un 
 
 9. Accede a la aplicación en tu navegador web en [http://localhost:8000](http://localhost:8000).
 
-10. Endpoints de la API
+## Endpoints de la API
 
 | Endpoint         | **Métodos** | Rutas                    |
 |------------------|-------------|--------------------------|
