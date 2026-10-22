@@ -21,8 +21,7 @@ class OrderDetail extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['order_id', 'product_id', 'total_amount', 'quantity'];
-
+    protected $fillable = ['order_id', 'product_id', 'quantity', 'unit_price', 'total_amount'];
 
     /**
      * Get the order associated with the item.

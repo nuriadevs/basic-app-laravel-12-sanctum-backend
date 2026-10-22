@@ -43,8 +43,6 @@ class LoginValidation
             'password' => [
                 'required',
                 'string',
-                'min:8',
-                'regex:/^[a-zA-Z0-9]{12}$/',
             ],
         ];
 

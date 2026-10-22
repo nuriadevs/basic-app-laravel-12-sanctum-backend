@@ -13,7 +13,7 @@ use Exception;
 
 /**
  * Class OrderService
- * 
+ *
  * Service class for managing orders.
  *
  * @package App\Services
@@ -41,9 +41,10 @@ class OrderService
             $orderDetails[] = [
                 'product_id' => $detail['product_id'],
                 'quantity' => $detail['quantity'],
+                'unit_price' => $product->price,
                 'price' => $product->price,
                 'total_amount' => $detail['quantity'] * $product->price,
-                
+
             ];
 
             $totalAmount += $detail['quantity'] * $product->price;
@@ -72,6 +73,7 @@ class OrderService
                 'total_amount' => number_format($detail->total_amount, 2, '.', ''),
                 'quantity' => $detail->quantity,
                 'price' => number_format($detail->product->price, 2, '.', ''),
+                'unit_price' => number_format($detail->product->price, 2, '.', ''),
                 'created_at' => $detail->created_at,
                 'updated_at' => $detail->updated_at,
             ];
@@ -93,41 +95,41 @@ class OrderService
      * Update an existing order.
      * @param  \Illuminate\Http\Request  $request
      * @return array
-     *  
+     *
      */
     public static function updateOrder(Request $request, $id)
     {
         // Validate the request data
         OrderValidation::validateOrderUpdate($request->all());
-    
+
         // Find the order by ID
         $order = Order::findOrFail($id);
-    
+
         $orderDetails = [];
         $totalAmount = 0;
-    
+
         // Get the IDs of the details sent in the request
         $requestedDetailIds = collect($request->order_details)->pluck('id')->filter()->toArray();
-    
+
         // Delete order details that are not in the request
         $order->orderDetails()->whereNotIn('id', $requestedDetailIds)->delete();
-    
+
         // foreach loop to iterate over the order details
         foreach ($request->order_details as $detail) {
             $product = Product::findOrFail($detail['product_id']);
-    
+
             if (!empty($detail['id'])) {
                 $orderDetail = $order->orderDetails()->where('id', $detail['id'])->first();
                 if ($orderDetail) {
                     $orderDetail->update([
                         'product_id' => $detail['product_id'],
                         'quantity' => $detail['quantity'],
-                        'price' => $product->price,  
+                        'price' => $product->price,
                         'total_amount' => $detail['quantity'] * $product->price,
                     ]);
                 }
             } else {
-               
+
                 $orderDetail = $order->orderDetails()->create([
                     'product_id' => $detail['product_id'],
                     'quantity' => $detail['quantity'],
@@ -135,26 +137,26 @@ class OrderService
                     'total_amount' => $detail['quantity'] * $product->price,
                 ]);
             }
-    
+
             $orderDetails[] = [
                 'id' => $orderDetail->id,
                 'order_id' => $order->id,
                 'product_id' => $product->id,
                 'quantity' => $orderDetail->quantity,
                 'total_amount' => number_format($orderDetail->total_amount, 2, '.', ''),
-                'price' => number_format($product->price, 2, '.', ''),  
+                'price' => number_format($product->price, 2, '.', ''),
                 'created_at' => $orderDetail->created_at,
                 'updated_at' => $orderDetail->updated_at,
             ];
-    
+
             $totalAmount += $orderDetail->total_amount;
         }
-    
+
         $order->update([
             'user_id' => $request->user_id,
             'total_amount' => $totalAmount,
         ]);
-    
+
         return [
             'user_id' => $order->user_id,
             'total_amount' => number_format($order->total_amount, 2, '.', ''),
@@ -166,7 +168,7 @@ class OrderService
             ],
         ];
     }
-    
+
 
     /**
      * Get all orders.

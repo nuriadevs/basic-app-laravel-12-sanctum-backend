@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class OrderDetailFactory extends Factory
 {
-    
+
     protected $model = OrderDetail::class;
 
     /**
@@ -18,12 +18,15 @@ class OrderDetailFactory extends Factory
      */
     public function definition()
     {
+        $quantity = $this->faker->numberBetween(1, 5);
+        $unitPrice = $this->faker->randomFloat(2, 1, 100);
+
         return [
             'order_id' => Order::factory(),
             'product_id' => Product::factory(),
-          //  'price' => $this->faker->randomFloat(2, 1, 100)  , 
-            'total_amount' => $this->faker->randomFloat(2, 10, 100),
-            'quantity' => $this->faker->numberBetween(1, 5), 
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice,
+            'total_amount' => round($unitPrice * $quantity, 2),
         ];
     }
 }
