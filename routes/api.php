@@ -16,7 +16,7 @@ Route::get('/user', function (Request $request) {
  * Routes that require authentication using Sanctum middleware.
  */
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::resource('users', UserController::class);
+    Route::resource('users', UserController::class)->middleware('admin');
     Route::resource('/products', ProductController::class);
     Route::resource('/orders', OrderController::class);
     Route::post('auth/logout', [AuthController::class, 'logout']);

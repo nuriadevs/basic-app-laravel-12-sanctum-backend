@@ -1,716 +1,1010 @@
 {
-    "openapi": "3.1.2",
-    "info": {
-        "title": "Laravel",
-        "version": "0.0.1"
+  "info": {
+    "_postman_id": "5b6f3c1e-8a2d-4f4e-9b1a-0a1b2c3d4e5f",
+    "name": "Shop API (Laravel 13 + Sanctum)",
+    "description": "# Shop API\n\nColeccion de pruebas para la API de la tienda (Laravel 13, Sanctum y MySQL 8).\n\n## Puesta en marcha\n1. Importa la base de datos de prueba: `mysql -u root -p < shop_completo.sql`\n2. Arranca la API: `php artisan serve` (por defecto en `http://localhost:8000`).\n3. Revisa la variable de coleccion **`baseUrl`** (pestana *Variables*). Incluye el prefijo `/api`.\n4. Lanza **Autenticacion > Login (admin)**: el token se guarda solo en `{{token}}`.\n\n## Variables de coleccion\n| Variable | Uso |\n|---|---|\n| `baseUrl` | URL base de la API, p. ej. `http://localhost:8000/api` |\n| `token` | Token Bearer del admin. Se rellena con *Login (admin)* |\n| `tokenCliente` | Token del cliente (*Login (cliente)*), solo para la prueba de acceso denegado |\n| `productId` | Primer producto de *Listar productos* |\n| `createdProductId` | Producto creado en *Crear producto* |\n| `orderId` | Pedido usado en *Ver pedido* |\n\n## Usuarios de prueba\n| Email | Contrasena | Rol | Activo |\n|---|---|---|---|\n| laura@example.com | `Admin1234!` | admin | si |\n| carlos@example.com | `Customer1234!` | customer | si |\n| ana, david, javier, lucia `@example.com` | `Customer1234!` | customer | si |\n| marta@example.com | `Customer1234!` | customer | **no** |\n\n## Cambios de esta version\n- `users.email_verified_at` (nullable) existe en la base de datos, pero la verificacion de email **aun no esta implementada**: los usuarios de prueba tienen `NULL` y el registro no la envia. Si tu API la expone, vendra como `null`.\n- `order_details.unit_price` guarda el precio del producto en el momento de la compra (`total_amount = unit_price * quantity`). Las pruebas de pedidos lo comprueban.\n- No ejecutes `php artisan migrate` sobre la base creada con el script SQL (no existe la tabla `migrations`).\n\n## Autenticacion\nTodas las peticiones salvo registro y login usan **Bearer Token** (`Authorization: Bearer {{token}}`), configurado a nivel de coleccion. Envia siempre `Accept: application/json`.\n\n## Importante: ajusta las rutas a tu API\nLas rutas, nombres de campos y formas de respuesta de esta coleccion (`/auth/register`, `/auth/login`, `/products`, `/orders`, `/users`...) son las convenciones habituales y **pueden no coincidir exactamente con las tuyas**. Comprueba `php artisan route:list --path=api` y edita las URLs o cuerpos que difieran. Los tests aceptan varias formas de respuesta (`token`, `data.token`, `access_token`).\n\n## Ejecutar todo\nPuedes usar el *Collection Runner* en este orden: Autenticacion, Productos, Pedidos, Usuarios. Las peticiones marcadas *(admin)* necesitan el token de administrador; las *(debe fallar)* son pruebas negativas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "type": "string",
+      "description": "URL base de la API (incluye /api)."
     },
-    "servers": [
-        {
-            "url": "http://localhost/api"
-        }
-    ],
-    "paths": {
-        "/user": {
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "`User`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/User"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/auth/logout": {
-            "post": {
-                "operationId": "auth.logout",
-                "description": "This method verifies if the user is authenticated with a valid token, to delete it and logout.",
-                "summary": "Logout an authenticated user",
-                "tags": [
-                    "Auth"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/auth/login": {
-            "post": {
-                "operationId": "auth.login",
-                "description": "This method validates the login credentials provided by the user\nand generates an access token upon successful authentication.",
-                "summary": "Log in a user",
-                "tags": [
-                    "Auth"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/auth/register": {
-            "post": {
-                "operationId": "auth.register",
-                "description": "This method validates the provided data to create a new user\nand, if valid, creates the user and generates an access token for them.",
-                "summary": "Register a new user",
-                "tags": [
-                    "Auth"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/orders": {
-            "get": {
-                "operationId": "orders.index",
-                "summary": "Displays all orders",
-                "tags": [
-                    "Order"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "orders.store",
-                "summary": "Stores a new order",
-                "tags": [
-                    "Order"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/orders/{id}": {
-            "get": {
-                "operationId": "orders.show",
-                "summary": "Displays a specific order",
-                "tags": [
-                    "Order"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "put": {
-                "operationId": "orders.update",
-                "summary": "Updates an existing order",
-                "tags": [
-                    "Order"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "orders.destroy",
-                "summary": "Deletes an existing order",
-                "tags": [
-                    "Order"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/products": {
-            "get": {
-                "operationId": "products.index",
-                "summary": "Displays all products",
-                "tags": [
-                    "Product"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "products.store",
-                "summary": "Stores a new product",
-                "tags": [
-                    "Product"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/products/{id}": {
-            "get": {
-                "operationId": "products.show",
-                "summary": "Displays a specific product",
-                "tags": [
-                    "Product"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "put": {
-                "operationId": "products.update",
-                "summary": "Updates an existing product",
-                "tags": [
-                    "Product"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "products.destroy",
-                "summary": "Deletes an existing product",
-                "tags": [
-                    "Product"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/users": {
-            "get": {
-                "operationId": "users.index",
-                "summary": "Displays all users",
-                "tags": [
-                    "User"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "users.store",
-                "summary": "Stores a new user",
-                "tags": [
-                    "User"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/users/{id}": {
-            "get": {
-                "operationId": "users.show",
-                "summary": "Displays a specific user",
-                "tags": [
-                    "User"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "put": {
-                "operationId": "users.update",
-                "summary": "Updates an existing user",
-                "tags": [
-                    "User"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "users.destroy",
-                "summary": "Deletes an existing user",
-                "tags": [
-                    "User"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        }
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Token Bearer de Sanctum (se rellena en Login)."
     },
-    "components": {
-        "schemas": {
-            "User": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "first_surname": {
-                        "type": "string"
-                    },
-                    "second_surname": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "address": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "phone_number": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "birthdate": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "profile_picture": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "dni": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "postal_code": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "city": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "role": {
-                        "type": "string"
-                    },
-                    "is_active": {
-                        "type": "integer"
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "email_verified_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "first_surname",
-                    "second_surname",
-                    "email",
-                    "address",
-                    "phone_number",
-                    "birthdate",
-                    "profile_picture",
-                    "dni",
-                    "postal_code",
-                    "city",
-                    "role",
-                    "is_active",
-                    "created_at",
-                    "updated_at",
-                    "email_verified_at"
-                ],
-                "title": "User"
-            }
-        },
-        "responses": {
-            "AuthenticationException": {
-                "description": "Unauthenticated",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
-            "ValidationException": {
-                "description": "Validation error",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Errors overview."
-                                },
-                                "errors": {
-                                    "type": "object",
-                                    "description": "A detailed description of each field that failed validation.",
-                                    "additionalProperties": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            },
-                            "required": [
-                                "message",
-                                "errors"
-                            ]
-                        }
-                    }
-                }
-            }
-        }
+    {
+      "key": "productId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdProductId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "tokenCliente",
+      "value": "",
+      "type": "string"
     }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticacion",
+      "description": "Registro, login y logout con Laravel Sanctum. Los *Login* guardan el token en `{{token}}`.",
+      "item": [
+        {
+          "name": "Registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Crea un usuario nuevo con rol `customer`.\n\n**Auth:** no requiere token.\n\n**Campos obligatorios:** `name`, `first_surname`, `second_surname`, `email`, `password`.\nEl resto (`address`, `phone_number`, `birthdate`, `dni`, `postal_code`, `city`) son opcionales.\n\n**Respuestas:** `201` creado, `422` error de validacion (por ejemplo, email ya registrado).\n\n> Cambia el email en cada ejecucion: `email` es unico en la base de datos.\n\n> `email_verified_at` no se envia: queda en `NULL` (verificacion de email pendiente).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nuevo\",\n  \"first_surname\": \"Usuario\",\n  \"second_surname\": \"Prueba\",\n  \"email\": \"nuevo.{{$timestamp}}@example.com\",\n  \"password\": \"Customer1234!\",\n  \"password_confirmation\": \"Customer1234!\",\n  \"phone_number\": \"600999888\",\n  \"birthdate\": \"1999-01-15\",\n  \"dni\": \"{{dni}}\",\n  \"postal_code\": \"29001\",\n  \"city\": \"Malaga\",\n  \"role\": \"customer\",\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 o 200\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// DNI distinto en cada ejecucion (la columna dni es unica)",
+                  "pm.variables.set('dni', String(Math.floor(10000000 + Math.random() * 89999999)) + 'H');"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Creado",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Usuario registrado\",\n  \"user\": {\n    \"id\": 8,\n    \"name\": \"Nuevo\",\n    \"email\": \"nuevo@example.com\",\n    \"role\": \"customer\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesion como **cliente** y guarda el token en `{{token}}` (sobrescribe el del admin).\n\nCredenciales: `carlos@example.com` / `Customer1234!`\n\nUtil para comprobar que un cliente **no** puede acceder a rutas de administrador (debe devolver `403`).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carlos@example.com\",\n  \"password\": \"Customer1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guarda el token del cliente en {{tokenCliente}} (no pisa el token del admin).",
+                  "// Se usa solo en la peticion que comprueba que un cliente no puede listar usuarios.",
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const token = json.token || (json.data && json.data.token) || json.access_token;",
+                  "pm.test(\"La respuesta contiene un token\", () => pm.expect(token).to.be.a(\"string\").and.not.empty);",
+                  "if (token) { pm.collectionVariables.set(\"tokenCliente\", token); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login (usuario inactivo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Prueba negativa: `marta@example.com` tiene `is_active = 0`.\n\n**Esperado:** que la API rechace el login (`401`, `403` o `422`, segun tu implementacion). Si devuelve `200` y un token, falta comprobar `is_active` en el controlador de login.\n\nCredenciales: `marta@example.com` / `Customer1234!`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"marta@example.com\",\n  \"password\": \"Customer1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Se rechaza el login\", () => pm.expect(pm.response.code).to.be.oneOf([401, 403, 422]));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login (contrasena incorrecta)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Prueba negativa: contrasena equivocada. **Esperado:** `401` o `422`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carlos@example.com\",\n  \"password\": \"incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Credenciales invalidas\", () => pm.expect(pm.response.code).to.be.oneOf([401, 422]));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Inicia sesion con el usuario **administrador** de la base de datos de prueba.\n\n**Auth:** no requiere token. **Guarda el token** automaticamente en `{{token}}`.\n\nCredenciales: `laura@example.com` / `Admin1234!`\n\nUsa esta peticion antes de probar las rutas que exigen rol admin (crear, editar o borrar productos, listar usuarios).\n\n**Respuestas:** `200` correcto, `401/422` credenciales incorrectas.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"laura@example.com\",\n  \"password\": \"Admin1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Guarda el token automaticamente en la variable de coleccion {{token}}",
+                  "// para que el resto de peticiones (Bearer) funcionen sin copiar y pegar.",
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const token = json.token || (json.data && json.data.token) || json.access_token;",
+                  "pm.test(\"La respuesta contiene un token\", () => pm.expect(token).to.be.a(\"string\").and.not.empty);",
+                  "if (token) { pm.collectionVariables.set(\"token\", token); }"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"token\": \"1|abc123...\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Laura\",\n    \"email\": \"laura@example.com\",\n    \"role\": \"admin\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Usuario autenticado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            },
+            "description": "Devuelve el usuario dueno del token actual.\n\n**Auth:** Bearer `{{token}}`.\n\n**Respuestas:** `200` correcto, `401` si falta el token o ha caducado.\n\n`email_verified_at` sera `null` hasta que se implemente la verificacion de email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve un email\", () => pm.expect(pm.response.json().email || (pm.response.json().data||{}).email).to.be.a(\"string\"));",
+                  "pm.test(\"email_verified_at es null (verificacion pendiente) o una fecha\", () => {",
+                  "  const j = pm.response.json(); const u = j.data || j;",
+                  "  if ('email_verified_at' in u) pm.expect(u.email_verified_at === null || typeof u.email_verified_at === 'string').to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Productos",
+      "description": "CRUD de productos. Lectura para usuarios autenticados; crear, editar y borrar solo para **admin**.",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "Lista todos los productos. Puede estar paginado segun tu controlador.\n\n**Auth:** Bearer `{{token}}` (o publica, segun tus rutas).\n\nLos datos de prueba incluyen 12 productos; el id 11 (Altavoz Bluetooth) tiene `stock = 0`, ideal para probar errores de stock insuficiente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const list = Array.isArray(json) ? json : (json.data || []);",
+                  "pm.test(\"Devuelve una lista\", () => pm.expect(list).to.be.an(\"array\"));",
+                  "if (list.length) { pm.collectionVariables.set('productId', list[0].id); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Ver producto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Devuelve un producto por id. Usa la variable `{{productId}}` (se rellena sola tras *Listar productos*).\n\n**Respuestas:** `200`, `404` si no existe."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear producto (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "Crea un producto.\n\n**Auth:** Bearer de **admin** (haz *Login (admin)* antes).\n\n**Campos:** `name` (obligatorio), `description`, `price` (obligatorio, >= 0), `stock` (entero >= 0).\n\n**Respuestas:** `201` creado, `401` sin token, `403` si no eres admin, `422` validacion.\n\nGuarda el id del producto creado en `{{createdProductId}}`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto de prueba\",\n  \"description\": \"Creado desde Postman\",\n  \"price\": 19.99,\n  \"stock\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Producto creado\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const json = pm.response.json();",
+                  "const p = json.data || json.product || json;",
+                  "if (p && p.id) { pm.collectionVariables.set('createdProductId', p.id); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Actualizar producto (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{createdProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{createdProductId}}"
+              ]
+            },
+            "description": "Actualiza el producto creado en la peticion anterior.\n\n**Auth:** Bearer de **admin**.\n\n**Respuestas:** `200`, `403` (no admin), `404`, `422`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto actualizado\",\n  \"description\": \"Editado desde Postman\",\n  \"price\": 24.99,\n  \"stock\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Eliminar producto (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{createdProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{createdProductId}}"
+              ]
+            },
+            "description": "Elimina el producto creado.\n\n**Auth:** Bearer de **admin**.\n\n**Respuestas:** `200/204`, `403`, `404`.\n\n> Los productos con pedidos (ids 1 a 10 y 12 de los datos de prueba) **no se pueden borrar**: la clave foranea `order_details.product_id` es `ON DELETE RESTRICT`. Prueba a borrar el id 1 para ver ese error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Eliminado\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Pedidos",
+      "description": "Pedidos del usuario autenticado y sus lineas (`order_details`).",
+      "item": [
+        {
+          "name": "Listar mis pedidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Devuelve los pedidos del usuario autenticado (un admin puede ver todos, segun tu implementacion).\n\n**Auth:** Bearer `{{token}}`.\n\nCon `carlos@example.com` deberias ver los pedidos 1 y 2; con `ana@example.com`, los pedidos 3 y 8."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const list = Array.isArray(json) ? json : (json.data || []);",
+                  "if (list.length) { pm.collectionVariables.set('orderId', list[0].id); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Ver pedido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            },
+            "description": "Devuelve un pedido con sus lineas (`data.order_details.products`).\n\n**Respuestas:** `200`, `404` si el pedido no existe.\n\nCada linea incluye `unit_price` (precio en el momento de la compra) y `total_amount = unit_price * quantity`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const o = j.data || j.order || j;",
+                  "const od = o && (o.order_details || o.orderDetails);",
+                  "const lines = Array.isArray(od) ? od : ((od && od.products) || []);",
+                  "pm.test(\"Las lineas tienen unit_price y total = unit_price x quantity\", () => {",
+                  "  pm.expect(lines, 'el pedido debe incluir sus lineas').to.be.an('array').that.is.not.empty;",
+                  "  lines.forEach(l => {",
+                  "    pm.expect(l).to.have.property('unit_price');",
+                  "    pm.expect(Math.abs(Number(l.unit_price) * Number(l.quantity) - Number(l.total_amount))).to.be.below(0.01);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Crea un pedido.\n\n**Body:** `user_id` y `order_details`, una lista de `{product_id, quantity}`. El servidor calcula `unit_price`, `total_amount` de cada linea y el total del pedido a partir del precio actual del producto.\n\n**Respuestas:** `200`, `422` si falla la validacion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"order_details\": [\n    {\n      \"product_id\": 2,\n      \"quantity\": 2\n    },\n    {\n      \"product_id\": 6,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pedido creado\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const json = pm.response.json();",
+                  "const o = json.data || json.order || json;",
+                  "if (o && o.id) { pm.collectionVariables.set('orderId', o.id); }",
+                  "const od = o && (o.order_details || o.orderDetails);",
+                  "const lines = Array.isArray(od) ? od : ((od && od.products) || []);",
+                  "pm.test(\"Las lineas tienen unit_price y total = unit_price x quantity\", () => {",
+                  "  pm.expect(lines, 'el pedido debe incluir sus lineas').to.be.an('array').that.is.not.empty;",
+                  "  lines.forEach(l => {",
+                  "    pm.expect(l).to.have.property('unit_price');",
+                  "    pm.expect(Math.abs(Number(l.unit_price) * Number(l.quantity) - Number(l.total_amount))).to.be.below(0.01);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Crear pedido (producto sin stock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Prueba negativa: el producto 11 tiene `stock = 0`. **Esperado:** `422` (o el codigo que uses para stock insuficiente).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"order_details\": [\n    {\n      \"product_id\": 11,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Se rechaza por stock\", () => pm.expect(pm.response.code).to.be.oneOf([400, 409, 422]));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Usuarios (admin)",
+      "description": "Gestion de usuarios, restringida al rol `admin`.",
+      "item": [
+        {
+          "name": "Listar usuarios (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Lista todos los usuarios.\n\n**Auth:** Bearer de **admin**.\n\n**Respuestas:** `200`, `403` si eres cliente. Comprueba que la respuesta **no incluye** `password` ni `remember_token`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const list = Array.isArray(json) ? json : (json.data || []);",
+                  "pm.test(\"No se expone la contrasena\", () => list.forEach(u => pm.expect(u).to.not.have.property(\"password\")));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Listar usuarios (como cliente, debe fallar)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Prueba negativa de autorizacion: haz *Login (cliente)* y lanza esta peticion. **Esperado:** `403`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Acceso denegado a clientes\", () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Cerrar sesion",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text",
+                "description": "Imprescindible en Laravel: sin esta cabecera, los errores de validacion o autenticacion devuelven HTML o redirigen en vez de JSON."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revoca el token actual en `personal_access_tokens`.\n\n**Auth:** Bearer `{{token}}`.\n\nDespues de esta peticion el token deja de ser valido: vuelve a hacer login."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Logout correcto\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));",
+                  "pm.collectionVariables.set(\"token\", \"\");"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
 }

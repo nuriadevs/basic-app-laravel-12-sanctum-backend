@@ -1,139 +1,116 @@
-# Basic App Laravel 12 Sanctum (Backend)
+# Basic App Laravel 13 Sanctum (Backend)
 
-📘 Disponible también en [Español](./README.es.md)
+📘 Also available in [Spanish](./README.es.md)
 
-Upgraded app to Laravel 12 and added new features, including tests.
+> **Update:** the application has been updated to Laravel 13 (requires PHP 8.3 or higher). The previous Laravel 12 version is still available on the [`main`](https://github.com/nuriadevs/basic-app-laravel-12-sanctum-backend/tree/main) branch.
 
-This application has been developed with Laravel, it offers CRUD operations and a basic authentication and registration system.
-
-  
+This application was developed with Laravel. It provides CRUD operations and a basic authentication and registration system.
 
 ## Environment 🛠️
 
-* [PHP 8.2.4](https://www.php.net/releases/8_2_4.php)
+- PHP 8.3 or higher
 
-* [Laravel 12](https://laravel.com/docs/12.x)
+- [Laravel 13](https://laravel.com/docs/13.x)
 
-* [Laravel Sanctum](https://laravel.com/docs/11.x/sanctum#main-content)
+- [Laravel Sanctum](https://laravel.com/docs/13.x/sanctum#main-content)
 
-* API
+- API
 
-* Test
+- Tests
 
-* CRUD
+- CRUD
 
-* MySQl
+- MySQL
 
-* Postman or Bruno
+- Postman or Bruno
 
-* Visual Studio Code
-
-  
+- Visual Studio Code
 
 ## Installation ⚙️
 
-1. Clone this repository to your local machine using `git clone https://github.com/nuriadevs/basic-app-laravel-12-sanctum-backend`.
+1. Clone the Laravel 13 branch to your local machine: `git clone -b upgrade-laravel-13 https://github.com/nuriadevs/basic-app-laravel-12-sanctum-backend`.
 
-  
+2. Install the PHP dependencies with `composer install`.
 
-2. Install PHP dependencies using Composer with `composer install`.
-
-  
-
-3. Copy the `.env.example` configuration file and set it up with your environment and `.env` file.
-
-  
+3. Copy the `.env.example` file to `.env` with `cp .env.example .env`.
 
 4. Generate an application key with `php artisan key:generate`.
 
-  
+5. Configure your database in the `.env` file (`DB_DATABASE=shop`, username and password) and set `SESSION_DRIVER=file`.
 
-5. Configure your database in the `.env` file.
+6. Create the database and the test data by importing the SQL script (do not use `php artisan migrate`):
 
-  
+    `mysql -u root -p < database/shop_completo.sql`
 
-6. Run migrations with `php artisan migrate`.
+7. Start the development server with `php artisan serve`.
 
-  
+8. Open the application in your web browser at [http://localhost:8000](http://localhost:8000).
 
-7. Run seeds for data with `php artisan db:seed`.
+> ⚠️ The script runs `DROP DATABASE IF EXISTS shop`, so it deletes any existing `shop` database.
 
-  
+### Test users
 
-8. Start the development server with `php artisan serve`.
+| Role     | Email                                                                                         | Password      |
+| -------- | --------------------------------------------------------------------------------------------- | ------------- |
+| Admin    | laura@example.com                                                                             | Admin1234!    |
+| Customer | carlos@example.com, ana@example.com, david@example.com, javier@example.com, lucia@example.com | Customer1234! |
+| Inactive | marta@example.com                                                                             | Customer1234! |
 
-  
+## API Endpoints
 
-9. Access the application in your web browser at [http://localhost:8000](http://localhost:8000).
+| Endpoint           | **Methods** | Routes                 |
+| ------------------ | ----------- | ---------------------- |
+| **Authentication** |             |                        |
+| Login              | POST        | api/auth/login         |
+| Register           | POST        | api/auth/register      |
+| Logout             | POST        | api/auth/logout        |
+| Authenticated user | GET         | api/user               |
+| **Users**          |             |                        |
+| Index              | GET         | api/users              |
+| Show               | GET         | api/users/{user}       |
+| Store              | POST        | api/users              |
+| Update             | PATCH       | api/users/{user}       |
+| Destroy            | DELETE      | api/users/{user}       |
+| **Products**       |             |                        |
+| Index              | GET         | api/products           |
+| Show               | GET         | api/products/{product} |
+| Store              | POST        | api/products           |
+| Update             | PATCH       | api/products/{product} |
+| Destroy            | DELETE      | api/products/{product} |
+| **Orders**         |             |                        |
+| Index              | GET         | api/orders             |
+| Show               | GET         | api/orders/{order}     |
+| Store              | POST        | api/orders             |
+| Update             | PATCH       | api/orders/{order}     |
+| Destroy            | DELETE      | api/orders/{order}     |
 
-## API endpoints
-
-  
-
-| Endpoint         | **Methods** | Routes                    |
-|------------------|-------------|---------------------------|
-| **Authentication** |             |                           |
-| Login            | POST        | api/auth/login            |
-| Register         | POST        | api/auth/register         |
-| Logout           | POST        | api/auth/logout           |
-| **Users**        |             |                           |
-| Index            | GET         | api/users                 |
-| Show             | GET         | api/users/{user}          |
-| Store            | POST        | api/users                 |
-| Update           | PATCH       | api/users/{user}          |
-| Destroy          | DELETE      | api/users/{user}          |
-| **Products**     |             |                           |
-| Index            | GET         | api/products              |
-| Show             | GET         | api/products/{product}    |
-| Store            | POST        | api/products              |
-| Update           | PATCH       | api/products/{product}    |
-| Destroy          | DELETE      | api/products/{product}    |
-| **Orders**       |             |                           |
-| Index            | GET         | api/orders                |
-| Show             | GET         | api/orders/{order}        |
-| Store            | POST        | api/orders                |
-| Update           | PATCH       | api/orders/{order}        |
-| Destroy          | DELETE      | api/orders/{order}        |
-
- 
 ## Environment Variables
 
-Visit `.env.example` to create  the environments.
+Check `.env.example` to create your environment.
 
-
-
-## Demo Postman :man_astronaut:
+## Postman Demo :man_astronaut:
 
 <img src="./media/1.png" alt="postman" width="600" />
 
-## Demo Bruno :dog:
-
-<img src="./media/2.png" alt="bruno" width="600" />
-
-## Database schema
+## Database Schema
 
 <img src="./media/bbdd.png" alt="database-schema" width="600" />
 
-## Watch video 
+## Links
 
-<img src="./media/3.png" alt="video" width="600" />
-
-You can watch the test in Postman of the restful API on this link  [Wath video](https://youtu.be/RxrGRVwGSak)
-
-
-## Links 
-- [Laravel](https://laravel.com/docs/12.x/releases)
+- [Laravel](https://laravel.com/docs/13.x/releases)
 - [Bruno](https://www.usebruno.com/)
 - [Postman](https://www.postman.com/)
 - [PHP](https://www.php.net/)
-  
 
 ## Summary
 
--   Don't forget to create your own .env file for the variables.
-- You can create your own data without running the seeder.
--   This project is under construction...can be improved.
+- Don't forget to create your own `.env` file for the variables.
+- The data used in the API is entirely fictitious and is used for testing purposes.
+- The test data is loaded with the `shop_completo.sql` script.
+- The `email_verified_at` column is ready, but email verification is not implemented yet.
+- This project is under construction... it can be improved.
 
-## Thanks 🍀
+## Thank you 🍀
 
 Thank you very much for reading this project.

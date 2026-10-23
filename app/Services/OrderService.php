@@ -7,6 +7,7 @@ use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Validations\OrderValidation;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
@@ -38,12 +39,18 @@ class OrderService
         foreach ($request->order_details as $detail) {
             $product = Product::findOrFail($detail['product_id']);
 
+            if ($product->stock < $detail['quantity']) {
+                throw ValidationException::withMessages([
+                    'order_details' => "Insufficient stock for product {$product->id}",
+                ]);
+            }
+
             $orderDetails[] = [
                 'product_id' => $detail['product_id'],
                 'quantity' => $detail['quantity'],
-                'unit_price' => $product->price,
-                'price' => $product->price,
-                'total_amount' => $detail['quantity'] * $product->price,
+                'unit_price' => number_format($product->price, 2, '.', ''),
+                'price' => number_format($product->price, 2, '.', ''),
+                'total_amount' => number_format($detail['quantity'] * $product->price, 2, '.', ''),
 
             ];
 
@@ -124,8 +131,8 @@ class OrderService
                     $orderDetail->update([
                         'product_id' => $detail['product_id'],
                         'quantity' => $detail['quantity'],
-                        'price' => $product->price,
-                        'total_amount' => $detail['quantity'] * $product->price,
+                        'price' => number_format($product->price, 2, '.', ''),
+                        'total_amount' => number_format($detail['quantity'] * $product->price, 2, '.', ''),
                     ]);
                 }
             } else {
@@ -133,8 +140,8 @@ class OrderService
                 $orderDetail = $order->orderDetails()->create([
                     'product_id' => $detail['product_id'],
                     'quantity' => $detail['quantity'],
-                    'price' => $product->price,
-                    'total_amount' => $detail['quantity'] * $product->price,
+                    'price' => number_format($product->price, 2, '.', ''),
+                    'total_amount' => number_format($detail['quantity'] * $product->price, 2, '.', ''),
                 ]);
             }
 
@@ -195,6 +202,7 @@ class OrderService
                             'product_id' => $detail->product_id,
                             'quantity' => $detail->quantity,
                             'total_amount' => number_format($detail->total_amount, 2, '.', ''),
+                            'unit_price' => number_format($detail->product->price, 2, '.', ''),
                             'price' => number_format($detail->product->price, 2, '.', ''),
                             'created_at' => $detail->created_at,
                             'updated_at' => $detail->updated_at,
@@ -229,6 +237,7 @@ class OrderService
                         'product_id' => $detail->product_id,
                         'quantity' => $detail->quantity,
                         'total_amount' => number_format($detail->total_amount, 2, '.', ''),
+                        'unit_price' => number_format($detail->product->price, 2, '.', ''),
                         'price' => number_format($detail->product->price, 2, '.', ''),
                         'created_at' => $detail->created_at,
                         'updated_at' => $detail->updated_at,
